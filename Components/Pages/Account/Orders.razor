@@ -1,0 +1,105 @@
+@page "/account/orders"
+@using Microsoft.AspNetCore.Components.Authorization
+@using EbikeStore.Models
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IOrderRepository OrderRepository
+
+@rendermode InteractiveServer
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="container mx-auto px-4 py-8">
+            <h1 class="text-3xl font-bold mb-6">My Orders</h1>
+            
+            @if (!orders.Any())
+            {
+                <div class="bg-white rounded-lg shadow-md p-8 text-center">
+                    <p class="text-gray-600 mb-4">You haven't placed any orders yet.</p>
+                    <a href="/products" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Start Shopping
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="py-3 px-4 text-left">Order ID</th>
+                                <th class="py-3 px-4 text-left">Date</th>
+                                <th class="py-3 px-4 text-left">Items</th>
+                                <th class="py-3 px-4 text-left">Total</th>
+                                <th class="py-3 px-4 text-left">Status</th>
+                                <th class="py-3 px-4 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in orders)
+                            {
+                                <tr class="border-b">
+                                    <td class="py-3 px-4">@order.Id</td>
+                                    <td class="py-3 px-4">@order.OrderDate.ToString("MM/dd/yyyy")</td>
+                                    <td class="py-3 px-4">@order.OrderItems.Count</td>
+                                    <td class="py-3 px-4">$@order.TotalAmount.ToString("F2")</td>
+                                    <td class="py-3 px-4">
+                                        <span class="px-2 py-1 rounded text-xs font-medium 
+                                            @(order.Status == OrderStatus.Pending ? "bg-yellow-100 text-yellow-800" :
+                                              order.Status == OrderStatus.Processing ? "bg-blue-100 text-blue-800" :
+                                              order.Status == OrderStatus.Shipped ? "bg-indigo-100 text-indigo-800" :
+                                              order.Status == OrderStatus.Delivered ? "bg-green-100 text-green-800" :
+                                              order.Status == OrderStatus.Cancelled ? "bg-red-100 text-red-800" :
+                                              "bg-gray-100 text-gray-800")">
+                                            @order.Status
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <button class="text-blue-500 hover:text-blue-700" @onclick="() => ViewOrderDetails(order.Id)">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="container mx-auto px-4 py-8">
+            <div class="bg-white rounded-lg shadow-md p-8 text-center">
+                <h2 class="text-2xl font-bold mb-4">Access Denied</h2>
+                <p class="text-gray-600">You need to be logged in to view your orders.</p>
+                <a href="/account/login" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4 inline-block">
+                    Login
+                </a>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<Order> orders = new();
+    private string? userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated ?? false)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                orders = (await OrderRepository.GetOrdersByUserIdAsync(userId)).ToList();
+            }
+        }
+    }
+
+    private void ViewOrderDetails(int orderId)
+    {
+        // Navigate to order details page
+        // You would implement this page in a real application
+    }
+}

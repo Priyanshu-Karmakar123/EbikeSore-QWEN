@@ -1,0 +1,100 @@
+@page "/products/details/{id:int}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using EbikeStore.Models
+@inject IProductRepository ProductRepository
+@inject IShoppingCartRepository ShoppingCartRepository
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+@rendermode InteractiveServer
+
+@if (product == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex flex-col md:flex-row gap-8">
+            <div class="md:w-1/2">
+                <img src="@product.ImageUrl" alt="@product.Name" class="w-full h-auto rounded-lg shadow-lg" />
+            </div>
+            <div class="md:w-1/2">
+                <h1 class="text-3xl font-bold mb-4">@product.Name</h1>
+                <p class="text-2xl text-green-600 font-semibold mb-6">$@product.Price.ToString("F2")</p>
+                <p class="text-gray-700 mb-6">@product.Description</p>
+                
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-3">Specifications</h2>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach (var spec in product.Specifications)
+                        {
+                            <div class="border-b pb-2">
+                                <span class="font-medium">@spec.Key:</span>
+                                <span class="ml-2">@spec.Value</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="flex items-center mb-4">
+                        <label class="mr-4 font-medium">Quantity:</label>
+                        <input type="number" class="border rounded w-16 py-1 px-2" @bind="quantity" min="1" max="@product.StockQuantity" />
+                        <span class="ml-4 text-gray-600">In Stock: @product.StockQuantity</span>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <button class="flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded" @onclick="AddToCart">
+                            Add to Cart
+                        </button>
+                        <button class="flex-1 bg-gray-500 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded" @onclick="GoBack">
+                            Back to Products
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Product? product;
+    private int quantity = 1;
+    private string? userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated ?? false)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        }
+
+        product = await ProductRepository.GetProductByIdAsync(Id);
+    }
+
+    private async Task AddToCart()
+    {
+        if (string.IsNullOrEmpty(userId))
+        {
+            Navigation.NavigateTo("/Account/Login");
+            return;
+        }
+
+        if (product != null)
+        {
+            await ShoppingCartRepository.AddItemToCartAsync(userId, product.Id, quantity);
+            // Show a success message or update UI as needed
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/products");
+    }
+}

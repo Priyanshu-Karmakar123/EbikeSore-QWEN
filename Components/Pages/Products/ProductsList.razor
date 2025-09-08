@@ -1,0 +1,119 @@
+@page "/products"
+@using Microsoft.AspNetCore.Components.Authorization
+@using EbikeStore.Models
+@inject IProductRepository ProductRepository
+@inject ICategoryRepository CategoryRepository
+@inject IBrandRepository BrandRepository
+@inject IShoppingCartRepository ShoppingCartRepository
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+@rendermode InteractiveServer
+
+<h1 class="text-3xl font-bold mb-6">Our Electric Bikes</h1>
+
+<div class="mb-6">
+    <div class="flex flex-wrap gap-2">
+        <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 @(selectedCategoryId == 0 ? "ring-2 ring-blue-300" : "")" @onclick="() => FilterByCategory(0)">All</button>
+        @foreach (var category in categories)
+        {
+            <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 @(selectedCategoryId == category.Id ? "ring-2 ring-blue-300" : "")" @onclick="() => FilterByCategory(category.Id)">@category.Name</button>
+        }
+    </div>
+</div>
+
+@if (filteredProducts.Any())
+{
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach (var product in filteredProducts)
+        {
+            <div class="border rounded-lg overflow-hidden shadow-lg">
+                <img src="@product.ImageUrl" alt="@product.Name" class="w-full h-48 object-cover" />
+                <div class="p-4">
+                    <div class="flex justify-between items-start">
+                        <h2 class="text-xl font-bold">@product.Name</h2>
+                        <span class="text-lg font-semibold text-green-600">$@product.Price.ToString("F2")</span>
+                    </div>
+                    <p class="text-gray-600 mt-2">@product.Description</p>
+                    <div class="mt-4 flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Brand: @product.Brand.Name</span>
+                        <span class="text-sm text-gray-500">In Stock: @product.StockQuantity</span>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button class="flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" @onclick="() => ViewProductDetails(product.Id)">
+                            View Details
+                        </button>
+                        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" @onclick="() => AddToCart(product.Id, 1)">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="text-center py-12">
+        <p class="text-xl text-gray-600">No products found.</p>
+    </div>
+}
+
+@code {
+    private List<Product> allProducts = new();
+    private List<Product> filteredProducts = new();
+    private List<Category> categories = new();
+    private int selectedCategoryId = 0;
+    private string? userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated ?? false)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        }
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        allProducts = (await ProductRepository.GetAllProductsAsync()).ToList();
+        filteredProducts = new List<Product>(allProducts);
+        categories = (await CategoryRepository.GetAllCategoriesAsync()).ToList();
+        StateHasChanged();
+    }
+
+    private void FilterByCategory(int categoryId)
+    {
+        selectedCategoryId = categoryId;
+        if (categoryId == 0)
+        {
+            filteredProducts = new List<Product>(allProducts);
+        }
+        else
+        {
+            filteredProducts = allProducts.Where(p => p.CategoryId == categoryId).ToList();
+        }
+        StateHasChanged();
+    }
+
+    private async Task AddToCart(int productId, int quantity)
+    {
+        if (string.IsNullOrEmpty(userId))
+        {
+            Navigation.NavigateTo("/Account/Login");
+            return;
+        }
+
+        await ShoppingCartRepository.AddItemToCartAsync(userId, productId, quantity);
+        // Show a success message or update UI as needed
+    }
+
+    private void ViewProductDetails(int productId)
+    {
+        Navigation.NavigateTo($"/products/details/{productId}");
+    }
+}

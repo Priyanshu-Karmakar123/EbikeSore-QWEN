@@ -1,0 +1,66 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@inject NavigationManager NavigationManager 
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="flex items-center space-x-4">
+            <a href="/cart" class="text-gray-700 hover:text-primary-600">
+                <span class="material-symbols-outlined">shopping_cart</span>
+            </a>
+            <div class="relative group">
+                <button class="flex items-center space-x-1 text-gray-700 hover:text-primary-600">
+                    <span class="material-symbols-outlined">account_circle</span>
+                    <span>Account</span>
+                </button>
+                <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden group-hover:block z-10">
+                    <a href="/account/manage" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                    <a href="/account/manage/orders" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</a>
+                    <AuthorizeView Roles="Admin,Staff">
+                        <div class="border-t border-gray-200"></div>
+                        <a href="/admin/dashboard" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Admin Dashboard</a>
+                        <a href="/admin/products" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Manage Products</a>
+                        <a href="/admin/categories" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Manage Categories</a>
+                        <a href="/admin/brands" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Manage Brands</a>
+                    </AuthorizeView>
+                    <div class="border-t border-gray-200"></div>
+                    <form action="/Account/Logout" method="post">
+                        <AntiforgeryToken />
+                        <input type="hidden" name="ReturnUrl" value="@currentUrl"  >
+
+                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="flex space-x-4">
+            <a href="/account/register" class="text-gray-700 hover:text-primary-600">Register</a>
+            <a href="/account/login" class="text-gray-700 hover:text-primary-600">Login</a>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

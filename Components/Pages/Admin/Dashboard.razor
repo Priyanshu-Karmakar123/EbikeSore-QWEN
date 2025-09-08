@@ -1,0 +1,139 @@
+@page "/admin/dashboard"
+@using Microsoft.AspNetCore.Components.Authorization
+@using EbikeStore.Models
+@inject IProductRepository ProductRepository
+@inject IOrderRepository OrderRepository
+
+@rendermode InteractiveServer
+
+<AuthorizeView Roles="Admin,Staff" Context="authContext">
+    <Authorized>
+        <div class="container mx-auto px-4 py-8">
+            <h1 class="text-3xl font-bold mb-6">Admin Dashboard</h1>
+            
+            <!-- Admin Navigation -->
+            <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+                <div class="flex flex-wrap gap-2">
+                    <a href="/admin/dashboard" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Dashboard</a>
+                    <a href="/admin/products" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Products</a>
+                    <a href="/admin/categories" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Categories</a>
+                    <a href="/admin/brands" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Brands</a>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 p-3 rounded-full mr-4">
+                            <span class="material-symbols-outlined text-blue-600">shopping_cart</span>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Total Products</p>
+                            <p class="text-2xl font-bold">@productCount</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 p-3 rounded-full mr-4">
+                            <span class="material-symbols-outlined text-green-600">inventory</span>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Total Orders</p>
+                            <p class="text-2xl font-bold">@orderCount</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center">
+                        <div class="bg-purple-100 p-3 rounded-full mr-4">
+                            <span class="material-symbols-outlined text-purple-600">attach_money</span>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Revenue</p>
+                            <p class="text-2xl font-bold">$@totalRevenue.ToString("F2")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold mb-4">Recent Orders</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="py-2 px-4 text-left">Order ID</th>
+                                <th class="py-2 px-4 text-left">Customer</th>
+                                <th class="py-2 px-4 text-left">Date</th>
+                                <th class="py-2 px-4 text-left">Total</th>
+                                <th class="py-2 px-4 text-left">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in recentOrders)
+                            {
+                                <tr class="border-b">
+                                    <td class="py-2 px-4">@order.Id</td>
+                                    <td class="py-2 px-4">@order.ApplicationUser?.FirstName @order.ApplicationUser?.LastName</td>
+                                    <td class="py-2 px-4">@order.OrderDate.ToString("MM/dd/yyyy")</td>
+                                    <td class="py-2 px-4">$@order.TotalAmount.ToString("F2")</td>
+                                    <td class="py-2 px-4">
+                                        <span class="px-2 py-1 rounded text-xs font-medium 
+                                            @(order.Status == OrderStatus.Pending ? "bg-yellow-100 text-yellow-800" :
+                                              order.Status == OrderStatus.Processing ? "bg-blue-100 text-blue-800" :
+                                              order.Status == OrderStatus.Shipped ? "bg-indigo-100 text-indigo-800" :
+                                              order.Status == OrderStatus.Delivered ? "bg-green-100 text-green-800" :
+                                              order.Status == OrderStatus.Cancelled ? "bg-red-100 text-red-800" :
+                                              "bg-gray-100 text-gray-800")">
+                                            @order.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="container mx-auto px-4 py-8">
+            <div class="bg-white rounded-lg shadow-md p-8 text-center">
+                <h2 class="text-2xl font-bold mb-4">Access Denied</h2>
+                <p class="text-gray-600">You do not have permission to access this page.</p>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private int productCount = 0;
+    private int orderCount = 0;
+    private decimal totalRevenue = 0;
+    private List<Order> recentOrders = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // In a real application, you would get these counts from the database
+        var products = await ProductRepository.GetAllProductsAsync();
+        productCount = products.Count();
+        
+        // For orders and revenue, you would query the database
+        // This is just sample data for demonstration
+        orderCount = 25;
+        totalRevenue = 12500.75m;
+        
+        // Sample recent orders
+        recentOrders = new List<Order>
+        {
+            new Order { Id = 1001, OrderDate = DateTime.Now.AddDays(-1), TotalAmount = 1299.99m, Status = OrderStatus.Processing },
+            new Order { Id = 1002, OrderDate = DateTime.Now.AddDays(-2), TotalAmount = 2199.99m, Status = OrderStatus.Shipped },
+            new Order { Id = 1003, OrderDate = DateTime.Now.AddDays(-3), TotalAmount = 1599.99m, Status = OrderStatus.Delivered },
+            new Order { Id = 1004, OrderDate = DateTime.Now.AddDays(-5), TotalAmount = 2799.99m, Status = OrderStatus.Pending },
+            new Order { Id = 1005, OrderDate = DateTime.Now.AddDays(-7), TotalAmount = 1899.99m, Status = OrderStatus.Delivered }
+        };
+    }
+}

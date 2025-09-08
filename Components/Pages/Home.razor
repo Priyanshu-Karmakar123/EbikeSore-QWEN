@@ -1,0 +1,95 @@
+@page "/"
+@using EbikeStore.Models
+@inject IProductRepository ProductRepository
+
+<div class="bg-gray-100">
+    <!-- Hero Section -->
+    <div class="relative bg-gradient-to-r from-primary-500 to-primary-700 text-white">
+        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="container mx-auto px-4 py-24 relative z-10">
+            <div class="max-w-2xl">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4">Premium Electric Bikes</h1>
+                <p class="text-xl mb-8">Experience the future of transportation with our high-performance electric bikes designed for city commuting and off-road adventures.</p>
+                <a href="/products" class="bg-accent-500 hover:bg-accent-600 text-white font-bold py-3 px-6 rounded-lg inline-block">
+                    Shop Now
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Products -->
+    <div class="container mx-auto px-4 py-16">
+        <h2 class="text-3xl font-bold text-center mb-12">Featured Electric Bikes</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            @foreach (var product in featuredProducts)
+            {
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <img src="@product.ImageUrl" alt="@product.Name" class="w-full h-48 object-cover" />
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-xl font-bold">@product.Name</h3>
+                            <span class="text-lg font-semibold text-accent-500">$@product.Price.ToString("F2")</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">@product.Description.Substring(0, Math.Min(100, product.Description.Length))...</p>
+                        <div class="flex justify-between">
+                            <a href="/products/details/@product.Id" class="text-primary-500 hover:text-primary-700 font-medium">View Details</a>
+                            <button class="bg-accent-500 hover:bg-accent-600 text-white py-1 px-3 rounded">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        <div class="text-center mt-12">
+            <a href="/products" class="inline-block bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 px-6 rounded-lg">
+                View All Products
+            </a>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="bg-white py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Why Choose Our Electric Bikes?</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-primary-600 text-2xl">bolt</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Powerful Performance</h3>
+                    <p class="text-gray-600">High-torque motors and long-lasting batteries for extended rides.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-primary-600 text-2xl">recycling</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Eco-Friendly</h3>
+                    <p class="text-gray-600">Zero emissions and reduced carbon footprint for a greener future.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-primary-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-primary-600 text-2xl">support_agent</span>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">24/7 Support</h3>
+                    <p class="text-gray-600">Expert customer service and warranty support for peace of mind.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Product> featuredProducts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var products = await ProductRepository.GetAllProductsAsync();
+        featuredProducts = products.Take(3).ToList();
+    }
+}

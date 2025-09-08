@@ -1,0 +1,54 @@
+﻿@implements IDisposable
+
+@inject NavigationManager NavigationManager
+
+<div class="bg-white shadow">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center h-16">
+            <a href="/" class="text-xl font-bold text-primary-600">EbikeStore</a>
+            
+            <nav class="hidden md:flex space-x-8">
+                <NavLink href="/" Match="NavLinkMatch.All" class="text-gray-700 hover:text-primary-600" ActiveClass="text-primary-600 font-medium">
+                    Home
+                </NavLink>
+                <NavLink href="/products" class="text-gray-700 hover:text-primary-600" ActiveClass="text-primary-600 font-medium">
+                    Products
+                </NavLink>
+                <NavLink href="/cart" class="text-gray-700 hover:text-primary-600" ActiveClass="text-primary-600 font-medium">
+                    Cart
+                </NavLink>
+                <AuthorizeView Roles="Admin,Staff" Context="authContext">
+                    <NavLink href="/admin/dashboard" class="text-gray-700 hover:text-primary-600" ActiveClass="text-primary-600 font-medium">
+                        Admin
+                    </NavLink>
+                </AuthorizeView>
+            </nav>
+            
+            <div class="flex items-center">
+                <AuthLinks />
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}
+

@@ -1,0 +1,47 @@
+﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="min-h-screen bg-gray-100">
+    <header class="bg-white shadow">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-xl font-bold text-primary-600">EbikeStore</a>
+                </div>
+                
+                <nav class="hidden md:flex space-x-8">
+                    <a href="/" class="text-gray-700 hover:text-primary-600">Home</a>
+                    <a href="/products" class="text-gray-700 hover:text-primary-600">Products</a>
+                    <a href="/cart" class="text-gray-700 hover:text-primary-600">Cart</a>
+                    <AuthorizeView Roles="Admin,Staff" Context="authContext">
+                        <a href="/admin/dashboard" class="text-gray-700 hover:text-primary-600">Admin</a>
+                    </AuthorizeView>
+                </nav>
+                
+                <div class="flex items-center">
+                    <AuthLinks />
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        @Body
+    </main>
+
+    <footer class="bg-white border-t mt-12">
+        <div class="container mx-auto px-4 py-6">
+            <div class="text-center text-gray-600">
+                &copy; 2025 EbikeStore. All rights reserved.
+            </div>
+        </div>
+    </footer>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

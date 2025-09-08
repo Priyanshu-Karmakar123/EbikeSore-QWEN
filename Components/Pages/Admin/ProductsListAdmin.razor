@@ -1,0 +1,95 @@
+@page "/admin/products"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using EbikeStore.Models
+@inject IProductRepository ProductRepository
+@inject ICategoryRepository CategoryRepository
+@inject IBrandRepository BrandRepository
+@inject NavigationManager Navigation
+
+@rendermode InteractiveServer
+
+<AuthorizeView Roles="Admin,Staff" Context="authContext">
+    <Authorized>
+        <div class="container mx-auto px-4 py-8">
+            <!-- Admin Navigation -->
+            <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+                <div class="flex flex-wrap gap-2">
+                    <a href="/admin/dashboard" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Dashboard</a>
+                    <a href="/admin/products" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Products</a>
+                    <a href="/admin/categories" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Categories</a>
+                    <a href="/admin/brands" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Brands</a>
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-bold">Product Management</h1>
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" @onclick="GoToCreate">
+                    Add New Product
+                </button>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <QuickGrid Items="products.AsQueryable()" Pagination="@pagination" class="w-full">
+                    <PropertyColumn Property="@(p => p.Id)" Title="ID" />
+                    <PropertyColumn Property="@(p => p.Name)" Title="Name" />
+                    <PropertyColumn Property="@(p => p.Brand.Name)" Title="Brand" />
+                    <PropertyColumn Property="@(p => p.Category.Name)" Title="Category" />
+                    <PropertyColumn Property="@(p => p.Price)" Title="Price" Format="C" />
+                    <PropertyColumn Property="@(p => p.StockQuantity)" Title="Stock" />
+                    <TemplateColumn Title="Actions" Context="itemContext">
+                        <div class="flex space-x-2">
+                            <button class="text-blue-500 hover:text-blue-700" @onclick="() => EditProduct(itemContext.Id)">
+                                <span class="material-symbols-outlined">edit</span>
+                            </button>
+                            <button class="text-red-500 hover:text-red-700" @onclick="() => DeleteProduct(itemContext.Id)">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </div>
+                    </TemplateColumn>
+                </QuickGrid>
+                <Paginator   State="@pagination" />
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="container mx-auto px-4 py-8">
+            <div class="bg-white rounded-lg shadow-md p-8 text-center">
+                <h2 class="text-2xl font-bold mb-4">Access Denied</h2>
+                <p class="text-gray-600">You do not have permission to access this page.</p>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<Product> products = new();
+    private PaginationState pagination = new() { ItemsPerPage = 5 };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    private async Task LoadProducts()
+    {
+        products = (await ProductRepository.GetAllProductsAsync()).ToList();
+        StateHasChanged();
+    }
+
+    private void GoToCreate()
+    {
+        Navigation.NavigateTo("/admin/products/create");
+    }
+
+    private void EditProduct(int productId)
+    {
+        Navigation.NavigateTo($"/admin/products/edit/{productId}");
+    }
+
+    private async Task DeleteProduct(int productId)
+    {
+        await ProductRepository.DeleteProductAsync(productId);
+        await LoadProducts();
+    }
+}

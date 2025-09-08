@@ -1,0 +1,406 @@
+@page "/checkout"
+@page "/checkout/success"
+@page "/checkout/cancel"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.Extensions.Configuration
+@using Microsoft.JSInterop
+@using EbikeStore.Models
+@using EbikeStore.Services
+@inject IShoppingCartRepository ShoppingCartRepository
+@inject IOrderRepository OrderRepository
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject IStripeService StripeService
+@inject IConfiguration Configuration
+
+@rendermode InteractiveServer
+
+<div class="container mx-auto px-4 py-8">
+    @if (step == 1)
+    {
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold mb-6">Checkout</h1>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h2 class="text-xl font-bold mb-4">Shipping Information</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-700 mb-2">First Name</label>
+                                <input type="text" class="w-full border rounded py-2 px-3" @bind="shippingAddress.FirstName" />
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2">Last Name</label>
+                                <input type="text" class="w-full border rounded py-2 px-3" @bind="shippingAddress.LastName" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gray-700 mb-2">Street Address</label>
+                                <input type="text" class="w-full border rounded py-2 px-3" @bind="shippingAddress.StreetAddress" />
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2">City</label>
+                                <input type="text" class="w-full border rounded py-2 px-3" @bind="shippingAddress.City" />
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2">State</label>
+                                <input type="text" class="w-full border rounded py-2 px-3" @bind="shippingAddress.State" />
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2">Postal Code</label>
+                                <input type="text" class="w-full border rounded py-2 px-3" @bind="shippingAddress.PostalCode" />
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2">Country</label>
+                                <input type="text" class="w-full border rounded py-2 px-3" @bind="shippingAddress.Country" />
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox" @bind="useSameForBilling" />
+                                <span class="ml-2">Use same address for billing</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    @if (!useSameForBilling)
+                    {
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <h2 class="text-xl font-bold mb-4">Billing Information</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-gray-700 mb-2">First Name</label>
+                                    <input type="text" class="w-full border rounded py-2 px-3" @bind="billingAddress.FirstName" />
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Last Name</label>
+                                    <input type="text" class="w-full border rounded py-2 px-3" @bind="billingAddress.LastName" />
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 mb-2">Street Address</label>
+                                    <input type="text" class="w-full border rounded py-2 px-3" @bind="billingAddress.StreetAddress" />
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 mb-2">City</label>
+                                    <input type="text" class="w-full border rounded py-2 px-3" @bind="billingAddress.City" />
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 mb-2">State</label>
+                                    <input type="text" class="w-full border rounded py-2 px-3" @bind="billingAddress.State" />
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Postal Code</label>
+                                    <input type="text" class="w-full border rounded py-2 px-3" @bind="billingAddress.PostalCode" />
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Country</label>
+                                    <input type="text" class="w-full border rounded py-2 px-3" @bind="billingAddress.Country" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6 h-fit">
+                    <h2 class="text-xl font-bold mb-4">Order Summary</h2>
+                    @if (shoppingCart?.CartItems != null)
+                    {
+                        @foreach (var item in shoppingCart.CartItems)
+                        {
+                            <div class="flex justify-between mb-2">
+                                <span>@(item.Product?.Name ?? "Unknown Product") x @item.Quantity</span>
+                                <span>$@(((item.Product?.Price ?? 0) * item.Quantity).ToString("F2"))</span>
+                            </div>
+                        }
+                    }
+                    <div class="border-t pt-3 mt-3">
+                        <div class="flex justify-between mb-1">
+                            <span>Subtotal</span>
+                            <span>$@cartTotal.ToString("F2")</span>
+                        </div>
+                        <div class="flex justify-between mb-1">
+                            <span>Shipping</span>
+                            <span>Free</span>
+                        </div>
+                        <div class="flex justify-between mb-1">
+                            <span>Tax</span>
+                            <span>$@tax.ToString("F2")</span>
+                        </div>
+                        <div class="flex justify-between font-bold text-lg mt-2">
+                            <span>Total</span>
+                            <span>$@totalWithTax.ToString("F2")</span>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded mt-6" @onclick="ProceedToPayment">
+                        Proceed to Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    else if (step == 2)
+    {
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold mb-6">Payment</h1>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <form id="payment-form">
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <h2 class="text-xl font-bold mb-4">Payment Method</h2>
+                            
+                            <div class="mb-4">
+                                <div class="flex items-center mb-2">
+                                    <input type="radio" id="card" name="paymentMethod" value="card" checked=@(paymentMethod == "card") @onchange=@(() => paymentMethod = "card") />
+                                    <label for="card" class="ml-2">Credit/Debit Card</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="cashapp" name="paymentMethod" value="cashapp" checked=@(paymentMethod == "cashapp") @onchange=@(() => paymentMethod = "cashapp") />
+                                    <label for="cashapp" class="ml-2">Cash App</label>
+                                </div>
+                            </div>
+                            
+                            <div id="payment-element" class="mb-4">
+                                <!-- Stripe Payment Element will be inserted here -->
+                            </div>
+                            
+                            <div id="error-message" class="text-red-500 mb-4 hidden">
+                                <!-- Error messages will be displayed here -->
+                            </div>
+                            
+                            <button id="submit" type="submit" class="hidden w-full bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-4 rounded">
+                                Pay Now
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6 h-fit">
+                    <h2 class="text-xl font-bold mb-4">Order Summary</h2>
+                    @if (shoppingCart?.CartItems != null)
+                    {
+                        @foreach (var item in shoppingCart.CartItems)
+                        {
+                            <div class="flex justify-between mb-2">
+                                <span>@(item.Product?.Name ?? "Unknown Product") x @item.Quantity</span>
+                                <span>$@(((item.Product?.Price ?? 0) * item.Quantity).ToString("F2"))</span>
+                            </div>
+                        }
+                    }
+                    <div class="border-t pt-3 mt-3">
+                        <div class="flex justify-between mb-1">
+                            <span>Subtotal</span>
+                            <span>$@cartTotal.ToString("F2")</span>
+                        </div>
+                        <div class="flex justify-between mb-1">
+                            <span>Shipping</span>
+                            <span>Free</span>
+                        </div>
+                        <div class="flex justify-between mb-1">
+                            <span>Tax</span>
+                            <span>$@tax.ToString("F2")</span>
+                        </div>
+                        <div class="flex justify-between font-bold text-lg mt-2">
+                            <span>Total</span>
+                            <span>$@totalWithTax.ToString("F2")</span>
+                        </div>
+                    </div>
+                    
+                    <button class="w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mt-3" @onclick="BackToShipping">
+                        Back to Shipping
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    else if (step == 3)
+    {
+        <div class="max-w-2xl mx-auto text-center">
+            <div class="bg-white rounded-lg shadow-md p-8">
+                <div class="text-green-500 text-6xl mb-4">
+                    <span class="material-symbols-outlined">check_circle</span>
+                </div>
+                <h1 class="text-3xl font-bold mb-4">Order Confirmed!</h1>
+                <p class="text-gray-600 mb-6">Thank you for your purchase. Your order #@orderId has been confirmed.</p>
+                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" @onclick="GoToProducts">
+                    Continue Shopping
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private int step = 1;
+    private EbikeStore.Models.ShoppingCart? shoppingCart;
+    private string? userId;
+    private string paymentMethod = "card";
+    private int orderId = 0;
+    
+    // Shipping and billing addresses
+    private Address shippingAddress = new Address();
+    private Address billingAddress = new Address();
+    private bool useSameForBilling = true;
+    
+    private decimal cartTotal => shoppingCart?.CartItems
+        ?.Where(item => item.Product != null)
+        .Sum(item => (item.Product?.Price ?? 0) * item.Quantity) ?? 0;
+    private decimal tax => cartTotal * 0.08m; // 8% tax
+    private decimal totalWithTax => cartTotal + tax;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated ?? false)
+        {
+            userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            await LoadCart();
+            
+            // Initialize addresses with user info
+            shippingAddress.FirstName = user.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? "";
+            shippingAddress.LastName = user.FindFirst(System.Security.Claims.ClaimTypes.Surname)?.Value ?? "";
+            billingAddress.FirstName = user.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? "";
+            billingAddress.LastName = user.FindFirst(System.Security.Claims.ClaimTypes.Surname)?.Value ?? "";
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/Account/Login");
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (uri.LocalPath == "/checkout/success")
+        {
+            await CompleteOrder();
+        }
+        else if (uri.LocalPath == "/checkout/cancel")
+        {
+            // Handle cancellation
+            step = 1;
+        }
+    }
+
+    private async Task LoadCart()
+    {
+        if (!string.IsNullOrEmpty(userId))
+        {
+            shoppingCart = await ShoppingCartRepository.GetShoppingCartByUserIdAsync(userId);
+        }
+    }
+
+    private async Task ProceedToPayment()
+    {
+        if (useSameForBilling)
+        {
+            billingAddress = new Address
+            {
+                FirstName = shippingAddress.FirstName,
+                LastName = shippingAddress.LastName,
+                StreetAddress = shippingAddress.StreetAddress,
+                City = shippingAddress.City,
+                State = shippingAddress.State,
+                PostalCode = shippingAddress.PostalCode,
+                Country = shippingAddress.Country
+            };
+        }
+        step = 2;
+        StateHasChanged();
+        
+        // Initialize Stripe payment after render with a more robust approach
+        await Task.Delay(100); // Give the UI time to render
+        await InitializeStripePayment();
+    }
+
+    private async Task InitializeStripePayment()
+    {
+        try
+        {
+            // Create order first to get order ID
+            var order = new Order
+            {
+                ApplicationUserId = userId ?? "",
+                OrderDate = DateTime.UtcNow,
+                TotalAmount = totalWithTax,
+                Status = OrderStatus.Pending,
+                ShippingAddress = shippingAddress,
+                BillingAddress = billingAddress
+            };
+
+            // Add order items
+            if (shoppingCart?.CartItems != null)
+            {
+                foreach (var item in shoppingCart.CartItems)
+                {
+                    order.OrderItems.Add(new OrderItem
+                    {
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.Product?.Price ?? 0
+                    });
+                }
+            }
+
+            // Save order to get order ID
+            var savedOrder = await OrderRepository.CreateOrderAsync(order);
+            orderId = savedOrder.Id;
+
+            // Create PaymentIntent using Stripe service
+            var returnUrl = $"{NavigationManager.BaseUri}checkout/success";
+            var result = await StripeService.CreatePaymentIntentAsync(
+                customerId: userId ?? "",
+                orderId: orderId,
+                amount: totalWithTax,
+                returnUrl: returnUrl,
+                paymentMethodType: paymentMethod
+            );
+
+            // Call JavaScript to initialize Stripe
+            var publishableKey = Configuration["Stripe:PublishableKey"];
+            await JSRuntime.InvokeVoidAsync("initStripePaymentElement", 
+                publishableKey, // Stripe publishable key
+                result.ClientSecret,
+                returnUrl, // Return URL
+                "customer@example.com", // Customer email
+                paymentMethod);
+                
+            await JSRuntime.InvokeVoidAsync("showStripeSubmitButton");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing payment: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("showErrorMessage", "Failed to initialize payment system. Please try again.");
+        }
+    }
+
+    private void BackToShipping()
+    {
+        step = 1;
+    }
+
+    private async Task CompleteOrder()
+    {
+        if (!string.IsNullOrEmpty(userId))
+        {
+            // Update order status to Processing
+            await OrderRepository.UpdateOrderStatusAsync(orderId, OrderStatus.Processing);
+
+            // Clear cart
+            await ShoppingCartRepository.ClearCartAsync(userId);
+
+            // Move to confirmation step
+            step = 3;
+        }
+    }
+
+    private void GoToProducts()
+    {
+        NavigationManager.NavigateTo("/products");
+    }
+}
